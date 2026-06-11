@@ -1,5 +1,5 @@
 // Types describing the Supabase database, so the typed client knows the shape
-// of `profiles` and `entries`. Mirror this with supabase-schema.sql.
+// of `books` and `entries`. Mirror this with supabase-schema.sql.
 // (You can also regenerate it with: supabase gen types typescript --project-id <ref>)
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
@@ -7,24 +7,30 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      books: {
         Row: {
           id: string
-          business_name: string
+          user_id: string
+          name: string
+          color: string
           currency: string
           created_at: string
           updated_at: string
         }
         Insert: {
-          id: string
-          business_name?: string
+          id?: string
+          user_id: string
+          name?: string
+          color?: string
           currency?: string
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          business_name?: string
+          user_id?: string
+          name?: string
+          color?: string
           currency?: string
           created_at?: string
           updated_at?: string
@@ -35,6 +41,7 @@ export interface Database {
         Row: {
           id: string
           user_id: string
+          book_id: string
           type: 'income' | 'expense'
           entry_date: string
           description: string
@@ -45,6 +52,7 @@ export interface Database {
         Insert: {
           id?: string
           user_id: string
+          book_id: string
           type: 'income' | 'expense'
           entry_date: string
           description: string
@@ -55,6 +63,7 @@ export interface Database {
         Update: {
           id?: string
           user_id?: string
+          book_id?: string
           type?: 'income' | 'expense'
           entry_date?: string
           description?: string

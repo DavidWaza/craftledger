@@ -16,6 +16,34 @@ export interface Settings {
   currency: string
 }
 
+/** A ledger book — a user can keep several, each with its own name, colour and currency. */
+export interface Book {
+  id: string
+  name: string
+  /** A key from BOOK_COLORS. */
+  color: string
+  currency: string
+}
+
+/** The palette a book can be tagged with. Hex is used directly so Tailwind purge can't strip it. */
+export const BOOK_COLORS = [
+  { key: 'indigo', label: 'Indigo', hex: '#2E3A66' },
+  { key: 'moss',   label: 'Moss',   hex: '#2F7A4D' },
+  { key: 'clay',   label: 'Clay',   hex: '#AE4438' },
+  { key: 'brass',  label: 'Brass',  hex: '#9C7A2E' },
+  { key: 'teal',   label: 'Teal',   hex: '#2B7A78' },
+  { key: 'plum',   label: 'Plum',   hex: '#6D3B6B' },
+  { key: 'slate',  label: 'Slate',  hex: '#445063' },
+  { key: 'rose',   label: 'Rose',   hex: '#B14A6B' }
+] as const
+
+export type BookColorKey = (typeof BOOK_COLORS)[number]['key']
+
+/** Resolve a colour key to its hex, falling back to the first colour. */
+export function bookColorHex(key: string): string {
+  return BOOK_COLORS.find(c => c.key === key)?.hex ?? BOOK_COLORS[0].hex
+}
+
 export const INCOME_CATEGORIES = [
   'Product sales',
   'Custom commissions',

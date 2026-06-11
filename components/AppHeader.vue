@@ -23,6 +23,7 @@ async function signOut() {
         <span class="hidden text-xs text-faint sm:inline">books for makers</span>
       </NuxtLink>
       <nav v-if="user" class="flex items-center gap-1 text-sm" aria-label="Main">
+        <BookSwitcher class="mr-1" />
         <NuxtLink
           v-for="l in links" :key="l.to" :to="l.to"
           class="rounded-md px-3 py-1.5 font-medium text-faint transition-colors hover:text-ink"

@@ -13,6 +13,7 @@ const description = ref(props.editing?.description ?? '')
 const category = ref(props.editing?.category ?? '')
 const amount = ref(props.editing ? (props.editing.amountMinor / 100).toFixed(2) : '')
 const error = ref('')
+const busy = ref(false)
 
 const categories = computed(() =>
   type.value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
@@ -25,7 +26,7 @@ const preview = computed(() => {
   return minor ? formatMoney(minor, settings.value.currency) : ''
 })
 
-function save() {
+async function save() {
   error.value = ''
   const minor = parseMoney(amount.value)
   if (!date.value) return (error.value = 'Pick a date for this entry.')
@@ -40,9 +41,20 @@ function save() {
     category: category.value,
     amountMinor: minor
   }
-  if (props.editing) updateEntry(props.editing.id, payload)
-  else addEntry(payload)
-  emit('saved')
+
+  busy.value = true
+  try {
+    const result = props.editing
+      ? await updateEntry(props.editing.id, payload)
+      : await addEntry(payload)
+    if (!result.ok) {
+      error.value = result.error
+      return
+    }
+    emit('saved')
+  } finally {
+    busy.value = false
+  }
 }
 </script>
 
@@ -99,8 +111,8 @@ function save() {
     <p v-if="error" class="mt-3 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ error }}</p>
 
     <div class="mt-4 flex gap-2">
-      <button type="submit" class="btn-primary">
-        {{ editing ? 'Save changes' : 'Add to the books' }}
+      <button type="submit" class="btn-primary" :disabled="busy">
+        {{ busy ? 'Saving…' : editing ? 'Save changes' : 'Add to the books' }}
       </button>
       <button type="button" class="btn-ghost" @click="emit('cancelled')">Cancel</button>
     </div>

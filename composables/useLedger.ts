@@ -13,17 +13,26 @@ interface EntryRow {
 /** Old localStorage key, used once during one-time migration. */
 const LEGACY_ENTRIES_KEY = 'craftledger:entries'
 
+/**
+ * The ledger lines for whichever book is currently open. Everything here is
+ * scoped to `activeBook` from useBooks(); switching books reloads the entries.
+ * Loading is orchestrated once in plugins/ledger.client.ts.
+ */
+export type LedgerMutationResult = { ok: true } | { ok: false; error: string }
+
 export function useLedger() {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
+  const { activeBook, activeBookId, ensureLoaded } = useBooks()
 
   const entries = useState<LedgerEntry[]>('cl-entries', () => [])
-  const settings = useState<Settings>('cl-settings', () => ({
-    businessName: '',
-    currency: 'NGN'
+
+  /** Per-book "profile": its name and currency. Derived, read-only — edit the
+   *  book itself via useBooks().updateBook (the Settings page does this). */
+  const settings = computed<Settings>(() => ({
+    businessName: activeBook.value?.name ?? '',
+    currency: activeBook.value?.currency ?? 'NGN'
   }))
-  const loaded = useState('cl-loaded', () => false)
-  const hydrating = useState('cl-hydrating', () => false)
 
   /* ---------- column ⇄ app-field mapping ---------- */
 
@@ -38,81 +47,43 @@ export function useLedger() {
     }
   }
 
-  /* ---------- load (replaces the localStorage read) ---------- */
+  /* ---------- load / reset (called by the orchestration plugin) ---------- */
 
-  async function loadEntries() {
-    // No `.eq('user_id', …)` here on purpose — RLS filters server-side.
+  async function reload() {
+    if (!activeBookId.value) {
+      entries.value = []
+      return
+    }
     const { data, error } = await supabase
       .from('entries')
       .select('id, type, entry_date, description, category, amount_minor')
+      .eq('book_id', activeBookId.value)
       .order('entry_date', { ascending: false })
-    if (!error && data) entries.value = (data as EntryRow[]).map(rowToEntry)
-  }
-
-  async function loadSettings() {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('business_name, currency')
-      .single()
-    if (!error && data) {
-      settings.value = {
-        businessName: data.business_name ?? '',
-        currency: data.currency ?? 'NGN'
-      }
+    if (error) {
+      console.error('[useLedger] reload', error)
+      return
     }
+    if (data) entries.value = (data as EntryRow[]).map(rowToEntry)
   }
 
-  async function ensureLoaded() {
-    if (loaded.value) return
-    loaded.value = true // set synchronously so concurrent callers don't double-load
-    hydrating.value = true
-    await Promise.all([loadEntries(), loadSettings()])
-    // Let the settings watcher flush (it runs async) while still hydrating, so
-    // the just-loaded values aren't echoed straight back as a redundant write.
-    await nextTick()
-    hydrating.value = false
-  }
-
-  if (import.meta.client) {
-    // Load when a user is present; wipe local state on sign-out so the next
-    // account never sees the previous one's figures.
-    watch(
-      user,
-      u => {
-        if (u) {
-          void ensureLoaded()
-        } else {
-          entries.value = []
-          settings.value = { businessName: '', currency: 'NGN' }
-          loaded.value = false
-        }
-      },
-      { immediate: true }
-    )
-
-    // Settings save themselves. The hydrating guard stops the initial load
-    // from echoing straight back as a write.
-    watch(
-      settings,
-      s => {
-        if (hydrating.value || !loaded.value || !user.value) return
-        void supabase
-          .from('profiles')
-          .update({ business_name: s.businessName, currency: s.currency })
-          .eq('id', user.value.id)
-      },
-      { deep: true }
-    )
+  function reset() {
+    entries.value = []
   }
 
   /* ---------- mutations (each writes to Supabase, then updates locally) ---------- */
 
-  async function addEntry(entry: Omit<LedgerEntry, 'id'>) {
-    if (!user.value) return
+  async function addEntry(entry: Omit<LedgerEntry, 'id'>): Promise<LedgerMutationResult> {
+    await ensureLoaded()
+    const uid = authUserId(user.value)
+    const bookId = activeBook.value?.id ?? activeBookId.value
+    if (!uid) return { ok: false, error: 'You are not signed in.' }
+    if (!bookId) return { ok: false, error: 'No book is open yet — wait a moment and try again.' }
+
     const { data, error } = await supabase
       .from('entries')
       .insert({
-        user_id: user.value.id,
+        user_id: uid,
+        book_id: bookId,
         type: entry.type,
         entry_date: entry.date,
         description: entry.description,
@@ -121,10 +92,15 @@ export function useLedger() {
       })
       .select('id')
       .single()
-    if (!error && data) entries.value.unshift({ ...entry, id: data.id })
+    if (error) {
+      console.error('[useLedger] addEntry', error)
+      return { ok: false, error: supabaseErrorMessage(error) }
+    }
+    if (data) entries.value.unshift({ ...entry, id: data.id })
+    return { ok: true }
   }
 
-  async function updateEntry(id: string, patch: Omit<LedgerEntry, 'id'>) {
+  async function updateEntry(id: string, patch: Omit<LedgerEntry, 'id'>): Promise<LedgerMutationResult> {
     const { error } = await supabase
       .from('entries')
       .update({
@@ -135,27 +111,36 @@ export function useLedger() {
         amount_minor: patch.amountMinor
       })
       .eq('id', id)
-    if (!error) {
-      const i = entries.value.findIndex(e => e.id === id)
-      if (i !== -1) entries.value[i] = { id, ...patch }
+    if (error) {
+      console.error('[useLedger] updateEntry', error)
+      return { ok: false, error: supabaseErrorMessage(error) }
     }
+    const i = entries.value.findIndex(e => e.id === id)
+    if (i !== -1) entries.value[i] = { id, ...patch }
+    return { ok: true }
   }
 
-  async function removeEntry(id: string) {
+  async function removeEntry(id: string): Promise<LedgerMutationResult> {
     const { error } = await supabase.from('entries').delete().eq('id', id)
-    if (!error) entries.value = entries.value.filter(e => e.id !== id)
+    if (error) {
+      console.error('[useLedger] removeEntry', error)
+      return { ok: false, error: supabaseErrorMessage(error) }
+    }
+    entries.value = entries.value.filter(e => e.id !== id)
+    return { ok: true }
   }
 
+  /** Clear every entry in the *current* book (other books are untouched). */
   async function clearAll() {
-    if (!user.value) return
+    if (!activeBookId.value) return
     const { error } = await supabase
       .from('entries')
       .delete()
-      .eq('user_id', user.value.id)
+      .eq('book_id', activeBookId.value)
     if (!error) entries.value = []
   }
 
-  /** One-time migration: pull anything left in this browser into the cloud. */
+  /** One-time migration: pull anything left in this browser into the current book. */
   async function importLocal(): Promise<number> {
     if (!import.meta.client) return 0
     const raw = localStorage.getItem(LEGACY_ENTRIES_KEY)
@@ -221,6 +206,7 @@ export function useLedger() {
 
   return {
     entries, settings,
+    reload, reset,
     addEntry, updateEntry, removeEntry, clearAll, importLocal,
     totalFor, monthlyNet, categoryTotals, yearsOnRecord
   }

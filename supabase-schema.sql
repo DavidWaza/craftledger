@@ -1,34 +1,43 @@
--- CraftLedger — Supabase schema
+-- CraftLedger — Supabase schema (v2, multi-book)
 -- Run the WHOLE file once in: Supabase Dashboard → SQL Editor → New query → Run.
--- It is safe to re-run: every statement is idempotent.
+-- Safe to re-run: every statement is idempotent.
 --
--- Sections:
---   1. profiles   — one row per user, holds their workshop settings
---   2. entries    — the ledger lines (sales and expenses)
---   3. trigger    — auto-creates a profile row the moment a user signs up
---   4. indexes    — keep reads fast as the books grow
---   5. RLS        — the wall between one artisan's books and another's
+-- ⚠️  Already running the v1 schema (with a `profiles` table)?  Do NOT run this
+--     file — run `supabase-migration-books.sql` instead, which upgrades v1 to v2
+--     without losing the entries you already have.
+--
+-- Model:
+--   books    — a user can keep several ledger books (Personal, Work, Kid…),
+--              each with its own name, colour and currency.
+--   entries  — the ledger lines; every entry belongs to one book (and one user).
+--   trigger  — gives each new user a starter book so they're never bookless.
+--   RLS      — the wall between one person's books and everyone else's.
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 1. profiles
+-- 1. books
 -- ─────────────────────────────────────────────────────────────────────────
-create table if not exists public.profiles (
-  id            uuid primary key references auth.users (id) on delete cascade,
-  business_name text        not null default '',
-  currency      text        not null default 'NGN',
-  created_at    timestamptz not null default now(),
-  updated_at    timestamptz not null default now()
+create table if not exists public.books (
+  id         uuid        primary key default gen_random_uuid(),
+  user_id    uuid        not null references auth.users (id) on delete cascade,
+  name       text        not null default 'My ledger' check (char_length(name) between 1 and 80),
+  color      text        not null default 'indigo',
+  currency   text        not null default 'NGN',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
+
+create index if not exists books_user_idx on public.books (user_id, created_at);
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 2. entries
---    Amounts are stored as integers in minor units (kobo, cents) — no floats.
---    The constraints below are the database refusing to record nonsense:
---    amounts must be positive, the type must be one of the two we know.
+--    Amounts are integers in minor units (kobo, cents) — no floats.
+--    book_id ties every line to exactly one book; deleting a book takes its
+--    entries with it (on delete cascade).
 -- ─────────────────────────────────────────────────────────────────────────
 create table if not exists public.entries (
   id           uuid        primary key default gen_random_uuid(),
   user_id      uuid        not null references auth.users (id) on delete cascade,
+  book_id      uuid        not null references public.books (id) on delete cascade,
   type         text        not null check (type in ('income', 'expense')),
   entry_date   date        not null,
   description  text        not null check (char_length(description) between 1 and 500),
@@ -37,10 +46,12 @@ create table if not exists public.entries (
   created_at   timestamptz not null default now()
 );
 
+create index if not exists entries_book_date_idx on public.entries (book_id, entry_date desc);
+
 -- ─────────────────────────────────────────────────────────────────────────
--- 3. trigger — create a profile automatically on sign-up
---    security definer lets the trigger insert into profiles even though the
---    new user has no rights yet; search_path is pinned to public for safety.
+-- 3. triggers
+--    a) Every new user gets one starter book.
+--    b) Keep books.updated_at honest.
 -- ─────────────────────────────────────────────────────────────────────────
 create or replace function public.handle_new_user()
 returns trigger
@@ -49,9 +60,8 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id)
-  values (new.id)
-  on conflict (id) do nothing;
+  insert into public.books (user_id, name)
+  values (new.id, 'My ledger');
   return new;
 end;
 $$;
@@ -61,7 +71,6 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
--- Keep updated_at honest on every profile write.
 create or replace function public.touch_updated_at()
 returns trigger
 language plpgsql
@@ -72,45 +81,30 @@ begin
 end;
 $$;
 
-drop trigger if exists profiles_touch_updated_at on public.profiles;
-create trigger profiles_touch_updated_at
-  before update on public.profiles
+drop trigger if exists books_touch_updated_at on public.books;
+create trigger books_touch_updated_at
+  before update on public.books
   for each row execute function public.touch_updated_at();
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 4. indexes — the books page reads "my entries, newest first"
+-- 4. Row Level Security  —  the part that matters most.
+--    Every query is rewritten server-side to "...and this row is mine".
 -- ─────────────────────────────────────────────────────────────────────────
-create index if not exists entries_user_date_idx
-  on public.entries (user_id, entry_date desc);
+alter table public.books   enable row level security;
+alter table public.entries enable row level security;
 
--- ─────────────────────────────────────────────────────────────────────────
--- 5. Row Level Security  —  this is the part that matters most.
---    With RLS on, every query is rewritten server-side to "...and the row
---    belongs to the caller". One artisan physically cannot read or change
---    another's books, even if the frontend forgot to filter.
--- ─────────────────────────────────────────────────────────────────────────
-alter table public.profiles enable row level security;
-alter table public.entries  enable row level security;
+-- books: a user sees and changes only their own books
+drop policy if exists "books select own" on public.books;
+drop policy if exists "books insert own" on public.books;
+drop policy if exists "books update own" on public.books;
+drop policy if exists "books delete own" on public.books;
 
--- profiles: a user sees and edits only their own row
-drop policy if exists "profiles select own"  on public.profiles;
-drop policy if exists "profiles insert own"  on public.profiles;
-drop policy if exists "profiles update own"  on public.profiles;
+create policy "books select own" on public.books for select using (auth.uid() = user_id);
+create policy "books insert own" on public.books for insert with check (auth.uid() = user_id);
+create policy "books update own" on public.books for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "books delete own" on public.books for delete using (auth.uid() = user_id);
 
-create policy "profiles select own"
-  on public.profiles for select
-  using (auth.uid() = id);
-
-create policy "profiles insert own"
-  on public.profiles for insert
-  with check (auth.uid() = id);
-
-create policy "profiles update own"
-  on public.profiles for update
-  using (auth.uid() = id)
-  with check (auth.uid() = id);
-
--- entries: a user reads, adds, edits and deletes only their own lines
+-- entries: only your own lines, and only filed under a book that is also yours
 drop policy if exists "entries select own" on public.entries;
 drop policy if exists "entries insert own" on public.entries;
 drop policy if exists "entries update own" on public.entries;
@@ -122,12 +116,18 @@ create policy "entries select own"
 
 create policy "entries insert own"
   on public.entries for insert
-  with check (auth.uid() = user_id);
+  with check (
+    auth.uid() = user_id
+    and exists (select 1 from public.books b where b.id = book_id and b.user_id = auth.uid())
+  );
 
 create policy "entries update own"
   on public.entries for update
   using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  with check (
+    auth.uid() = user_id
+    and exists (select 1 from public.books b where b.id = book_id and b.user_id = auth.uid())
+  );
 
 create policy "entries delete own"
   on public.entries for delete
