@@ -23,6 +23,14 @@ function saveCurrency(e: Event) {
   if (activeBook.value) updateBook(activeBook.value.id, { currency: (e.target as HTMLSelectElement).value })
 }
 
+/* ---------- NRS tax settings ---------- */
+function setVatRegistered(e: Event) {
+  if (activeBook.value) updateBook(activeBook.value.id, { vatRegistered: (e.target as HTMLInputElement).checked })
+}
+function setPriceBasis(e: Event) {
+  if (activeBook.value) updateBook(activeBook.value.id, { pricesVatInclusive: (e.target as HTMLSelectElement).value === 'inclusive' })
+}
+
 /* ---------- the book list ---------- */
 const confirmingDelete = ref<string | null>(null)
 async function askDelete(id: string) {
@@ -124,6 +132,41 @@ function loadSample() {
         </select>
       </label>
       <p class="mt-3 text-xs text-faint">Changes save automatically and apply across this book only.</p>
+    </section>
+
+    <!-- Tax (NRS) -->
+    <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift">
+      <h2 class="font-display text-lg font-semibold">Tax (NRS)</h2>
+      <p class="mt-1 text-sm text-faint">
+        How this book is treated on the
+        <NuxtLink to="/tax" class="font-medium text-indigo hover:underline">Tax</NuxtLink> page.
+      </p>
+
+      <label class="mt-4 flex items-start gap-3">
+        <input
+          type="checkbox" class="mt-1 accent-indigo"
+          :checked="activeBook?.vatRegistered" @change="setVatRegistered"
+        />
+        <span>
+          <span class="block text-sm font-medium">VAT-registered</span>
+          <span class="block text-xs text-faint">
+            Tick if this business charges 7.5% VAT (turnover over ₦50m). Untick and no VAT is computed.
+          </span>
+        </span>
+      </label>
+
+      <label class="mt-4 block">
+        <span class="mb-1 block text-xs font-medium text-faint">How sale amounts are recorded</span>
+        <select
+          class="field"
+          :value="activeBook?.pricesVatInclusive ? 'inclusive' : 'exclusive'"
+          :disabled="!activeBook?.vatRegistered"
+          @change="setPriceBasis"
+        >
+          <option value="inclusive">VAT-inclusive — the price already contains the 7.5%</option>
+          <option value="exclusive">VAT-exclusive — 7.5% is added on top</option>
+        </select>
+      </label>
     </section>
 
     <!-- All books -->

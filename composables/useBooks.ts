@@ -6,7 +6,11 @@ interface BookRow {
   name: string
   color: string
   currency: string
+  vat_registered: boolean
+  prices_vat_inclusive: boolean
 }
+
+const BOOK_COLUMNS = 'id, name, color, currency, vat_registered, prices_vat_inclusive'
 
 /**
  * Manages the user's set of ledger books and which one is currently open.
@@ -30,13 +34,20 @@ export function useBooks() {
   )
 
   function rowToBook(r: BookRow): Book {
-    return { id: r.id, name: r.name, color: r.color, currency: r.currency }
+    return {
+      id: r.id,
+      name: r.name,
+      color: r.color,
+      currency: r.currency,
+      vatRegistered: r.vat_registered,
+      pricesVatInclusive: r.prices_vat_inclusive
+    }
   }
 
   async function loadBooks() {
     const { data, error } = await supabase
       .from('books')
-      .select('id, name, color, currency')
+      .select(BOOK_COLUMNS)
       .order('created_at', { ascending: true })
     if (error) {
       console.error('[useBooks] loadBooks', error)
@@ -78,7 +89,7 @@ export function useBooks() {
         color: input.color,
         currency: input.currency
       })
-      .select('id, name, color, currency')
+      .select(BOOK_COLUMNS)
       .single()
     if (error) {
       console.error('[useBooks] createBook', error)
@@ -93,8 +104,25 @@ export function useBooks() {
     return null
   }
 
-  async function updateBook(id: string, patch: Partial<Pick<Book, 'name' | 'color' | 'currency'>>) {
-    const { error } = await supabase.from('books').update(patch).eq('id', id)
+  async function updateBook(
+    id: string,
+    patch: Partial<Pick<Book, 'name' | 'color' | 'currency' | 'vatRegistered' | 'pricesVatInclusive'>>
+  ) {
+    // Translate camelCase app fields → snake_case columns.
+    const dbPatch: {
+      name?: string
+      color?: string
+      currency?: string
+      vat_registered?: boolean
+      prices_vat_inclusive?: boolean
+    } = {}
+    if (patch.name !== undefined) dbPatch.name = patch.name
+    if (patch.color !== undefined) dbPatch.color = patch.color
+    if (patch.currency !== undefined) dbPatch.currency = patch.currency
+    if (patch.vatRegistered !== undefined) dbPatch.vat_registered = patch.vatRegistered
+    if (patch.pricesVatInclusive !== undefined) dbPatch.prices_vat_inclusive = patch.pricesVatInclusive
+
+    const { error } = await supabase.from('books').update(dbPatch).eq('id', id)
     if (!error) {
       const i = books.value.findIndex(b => b.id === id)
       if (i !== -1) books.value[i] = { ...books.value[i], ...patch }

@@ -23,6 +23,10 @@ export interface Book {
   /** A key from BOOK_COLORS. */
   color: string
   currency: string
+  /** Is this book's business registered to charge/remit VAT (turnover over the ₦50m threshold)? */
+  vatRegistered: boolean
+  /** Are recorded sale amounts VAT-inclusive (the price already contains the 7.5%)? */
+  pricesVatInclusive: boolean
 }
 
 /** The palette a book can be tagged with. Hex is used directly so Tailwind purge can't strip it. */

@@ -17,13 +17,16 @@
 -- 1. books
 -- ─────────────────────────────────────────────────────────────────────────
 create table if not exists public.books (
-  id         uuid        primary key default gen_random_uuid(),
-  user_id    uuid        not null references auth.users (id) on delete cascade,
-  name       text        not null default 'My ledger' check (char_length(name) between 1 and 80),
-  color      text        not null default 'indigo',
-  currency   text        not null default 'NGN',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  id                    uuid        primary key default gen_random_uuid(),
+  user_id               uuid        not null references auth.users (id) on delete cascade,
+  name                  text        not null default 'My ledger' check (char_length(name) between 1 and 80),
+  color                 text        not null default 'indigo',
+  currency              text        not null default 'NGN',
+  -- NRS tax settings (see utils/tax.ts)
+  vat_registered        boolean     not null default true,
+  prices_vat_inclusive  boolean     not null default true,
+  created_at            timestamptz not null default now(),
+  updated_at            timestamptz not null default now()
 );
 
 create index if not exists books_user_idx on public.books (user_id, created_at);

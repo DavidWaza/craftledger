@@ -14,6 +14,8 @@ export interface Database {
           name: string
           color: string
           currency: string
+          vat_registered: boolean
+          prices_vat_inclusive: boolean
           created_at: string
           updated_at: string
         }
@@ -23,6 +25,8 @@ export interface Database {
           name?: string
           color?: string
           currency?: string
+          vat_registered?: boolean
+          prices_vat_inclusive?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -32,6 +36,8 @@ export interface Database {
           name?: string
           color?: string
           currency?: string
+          vat_registered?: boolean
+          prices_vat_inclusive?: boolean
           created_at?: string
           updated_at?: string
         }

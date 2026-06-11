@@ -1,5 +1,13 @@
 <script setup lang="ts">
-const { entries, settings, totalFor, monthlyNet, addEntry } = useLedger()
+const { entries, settings, totalFor, monthlyNet, addEntry, removeEntry } = useLedger()
+
+const deleteError = ref('')
+
+async function handleRemove(id: string) {
+  deleteError.value = ''
+  const result = await removeEntry(id)
+  if (!result.ok) deleteError.value = result.error
+}
 
 const now = new Date()
 const year = now.getFullYear()
@@ -64,7 +72,8 @@ function loadSample() {
           <h2 class="font-display text-lg font-semibold">Latest entries</h2>
           <NuxtLink to="/books" class="text-sm font-medium text-indigo hover:underline">Open the books →</NuxtLink>
         </div>
-        <LedgerTable :entries="recent" :currency="currency" @edit="navigateTo('/books')" @remove="() => {}" />
+        <p v-if="deleteError" class="mb-3 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ deleteError }}</p>
+        <LedgerTable :entries="recent" :currency="currency" @edit="navigateTo('/books')" @remove="handleRemove" />
       </section>
     </template>
 

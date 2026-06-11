@@ -3,6 +3,7 @@ const links = [
   { to: '/', label: 'Overview' },
   { to: '/books', label: 'The books' },
   { to: '/reports', label: 'Reports' },
+  { to: '/tax', label: 'Tax' },
   { to: '/settings', label: 'Settings' }
 ]
 

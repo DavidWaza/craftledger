@@ -11,6 +11,13 @@ const search = ref('')
 
 const showForm = ref(false)
 const editing = ref<LedgerEntry | null>(null)
+const deleteError = ref('')
+
+async function handleRemove(id: string) {
+  deleteError.value = ''
+  const result = await removeEntry(id)
+  if (!result.ok) deleteError.value = result.error
+}
 
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
@@ -62,10 +69,12 @@ function closeForm() {
       <input v-model="search" type="search" class="field !w-auto flex-1 min-w-[160px]" placeholder="Search descriptions…" />
     </div>
 
+    <p v-if="deleteError" class="mt-4 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ deleteError }}</p>
+
     <LedgerTable
       v-if="filtered.length"
       class="mt-4" :entries="filtered" :currency="settings.currency" show-totals
-      @edit="startEdit" @remove="removeEntry"
+      @edit="startEdit" @remove="handleRemove"
     />
     <div v-else class="mt-4 rounded-lg border border-dashed border-rule bg-card p-10 text-center text-sm text-faint">
       No entries match this view. Change the month or filters, or record a new entry.

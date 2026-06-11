@@ -121,10 +121,17 @@ export function useLedger() {
   }
 
   async function removeEntry(id: string): Promise<LedgerMutationResult> {
-    const { error } = await supabase.from('entries').delete().eq('id', id)
+    const { data, error } = await supabase
+      .from('entries')
+      .delete()
+      .eq('id', id)
+      .select('id')
     if (error) {
       console.error('[useLedger] removeEntry', error)
       return { ok: false, error: supabaseErrorMessage(error) }
+    }
+    if (!data?.length) {
+      return { ok: false, error: 'Could not delete that entry — it may already be gone, or you may not have permission.' }
     }
     entries.value = entries.value.filter(e => e.id !== id)
     return { ok: true }
