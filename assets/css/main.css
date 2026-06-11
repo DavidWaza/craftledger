@@ -18,6 +18,17 @@
 }
 
 @layer components {
+  /* Shared page chrome */
+  .page-header {
+    @apply flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between;
+  }
+  .page-title {
+    @apply font-display text-2xl font-bold tracking-tight sm:text-3xl;
+  }
+  .page-actions {
+    @apply flex w-full flex-col gap-2 sm:w-auto sm:flex-shrink-0 sm:flex-row;
+  }
+
   /* The accountant's rules: a single rule above a subtotal,
      a double rule closing a final total. */
   .rule-subtotal {
@@ -38,11 +49,17 @@
       placeholder:text-faint focus:border-indigo focus:outline-none;
   }
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-md bg-indigo px-4 py-2 text-sm
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-indigo px-4 py-2 text-sm
       font-medium text-paper transition-colors hover:bg-indigo-deep;
   }
   .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-md border border-rule bg-card
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md border border-rule bg-card
       px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-indigo;
+  }
+  .filter-bar {
+    @apply grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center;
+  }
+  .filter-bar .field {
+    @apply w-full sm:!w-auto;
   }
 }

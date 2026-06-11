@@ -11,7 +11,7 @@ defineProps<{
   <div class="rounded-lg border border-rule bg-card p-4 shadow-lift">
     <p class="text-xs font-medium uppercase tracking-wider text-faint">{{ label }}</p>
     <p
-      class="figure mt-2 text-2xl font-semibold"
+      class="figure mt-2 text-xl font-semibold sm:text-2xl"
       :class="tone === 'profit' ? 'text-moss' : tone === 'loss' ? 'text-clay' : 'text-ink'"
     >
       {{ value }}

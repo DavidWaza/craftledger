@@ -24,53 +24,53 @@ function paren(v: number) { return v < 0 ? `(${money(-v)})` : money(v) }
 
 <template>
   <div>
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="font-display text-3xl font-bold tracking-tight">Reports</h1>
+    <div class="page-header">
+      <div class="min-w-0">
+        <h1 class="page-title">Reports</h1>
         <p class="mt-1 text-sm text-faint">Your profit &amp; loss by month, and the year's gross.</p>
       </div>
-      <div class="flex gap-2">
-        <select v-model.number="month" class="field !w-auto" aria-label="Month">
+      <div class="page-actions">
+        <select v-model.number="month" class="field w-full sm:!w-auto" aria-label="Month">
           <option v-for="(m, i) in MONTH_NAMES" :key="m" :value="i + 1">{{ m }}</option>
         </select>
-        <select v-model.number="year" class="field !w-auto" aria-label="Year">
+        <select v-model.number="year" class="field w-full sm:!w-auto" aria-label="Year">
           <option v-for="y in yearsOnRecord" :key="y" :value="y">{{ y }}</option>
         </select>
       </div>
     </div>
 
     <!-- Monthly P&L statement -->
-    <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift sm:p-8">
+    <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-8">
       <header class="text-center">
-        <h2 class="font-display text-xl font-semibold">{{ settings.businessName || 'Your workshop' }}</h2>
-        <p class="text-sm text-faint">Profit &amp; loss statement — {{ MONTH_NAMES[month - 1] }} {{ year }} (cash basis)</p>
+        <h2 class="font-display text-lg font-semibold sm:text-xl">{{ settings.businessName || 'Your workshop' }}</h2>
+        <p class="mt-1 text-sm text-faint">Profit &amp; loss statement — {{ MONTH_NAMES[month - 1] }} {{ year }} (cash basis)</p>
       </header>
 
       <div class="mx-auto mt-6 max-w-xl text-sm">
         <h3 class="text-xs font-medium uppercase tracking-wider text-faint">Income</h3>
-        <div v-for="[cat, v] in incomeLines" :key="cat" class="ledger-row flex justify-between py-1.5">
-          <span>{{ cat }}</span><span class="figure">{{ money(v) }}</span>
+        <div v-for="[cat, v] in incomeLines" :key="cat" class="ledger-row flex flex-col gap-0.5 py-1.5 sm:flex-row sm:justify-between">
+          <span class="min-w-0">{{ cat }}</span><span class="figure shrink-0 sm:text-right">{{ money(v) }}</span>
         </div>
         <div v-if="!incomeLines.length" class="ledger-row py-1.5 text-faint">No income recorded</div>
-        <div class="rule-subtotal mt-1 flex justify-between py-1.5 font-medium">
-          <span>Total income</span><span class="figure">{{ money(totalIncome) }}</span>
+        <div class="rule-subtotal mt-1 flex flex-col gap-0.5 py-1.5 font-medium sm:flex-row sm:justify-between">
+          <span>Total income</span><span class="figure shrink-0 sm:text-right">{{ money(totalIncome) }}</span>
         </div>
 
         <h3 class="mt-6 text-xs font-medium uppercase tracking-wider text-faint">Expenses</h3>
-        <div v-for="[cat, v] in expenseLines" :key="cat" class="ledger-row flex justify-between py-1.5">
-          <span>{{ cat }}</span><span class="figure">({{ money(v) }})</span>
+        <div v-for="[cat, v] in expenseLines" :key="cat" class="ledger-row flex flex-col gap-0.5 py-1.5 sm:flex-row sm:justify-between">
+          <span class="min-w-0">{{ cat }}</span><span class="figure shrink-0 sm:text-right">({{ money(v) }})</span>
         </div>
         <div v-if="!expenseLines.length" class="ledger-row py-1.5 text-faint">No expenses recorded</div>
-        <div class="rule-subtotal mt-1 flex justify-between py-1.5 font-medium">
-          <span>Total expenses</span><span class="figure">({{ money(totalExpenses) }})</span>
+        <div class="rule-subtotal mt-1 flex flex-col gap-0.5 py-1.5 font-medium sm:flex-row sm:justify-between">
+          <span>Total expenses</span><span class="figure shrink-0 sm:text-right">({{ money(totalExpenses) }})</span>
         </div>
 
         <div
-          class="rule-total mt-6 flex justify-between py-2 text-base font-semibold"
+          class="rule-total mt-6 flex flex-col gap-1 py-2 text-base font-semibold sm:flex-row sm:justify-between"
           :class="netResult >= 0 ? 'text-moss' : 'text-clay'"
         >
           <span>Net {{ netResult >= 0 ? 'profit' : 'loss' }} for the month</span>
-          <span class="figure">{{ paren(netResult) }}</span>
+          <span class="figure shrink-0 sm:text-right">{{ paren(netResult) }}</span>
         </div>
         <p class="mt-2 text-xs text-faint">
           Figures in parentheses are deductions — the accountant's way of writing money out.
@@ -79,9 +79,9 @@ function paren(v: number) { return v < 0 ? `(${money(-v)})` : money(v) }
     </section>
 
     <!-- Yearly view -->
-    <section class="mt-8 rounded-lg border border-rule bg-card p-5 shadow-lift sm:p-8">
-      <h2 class="font-display text-xl font-semibold">The year {{ year }}, in full</h2>
-      <div class="mt-4 grid gap-3 sm:grid-cols-3">
+    <section class="mt-8 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-8">
+      <h2 class="font-display text-lg font-semibold sm:text-xl">The year {{ year }}, in full</h2>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard label="Gross revenue" :value="formatMoneyShort(yearGross, currency)" hint="all income, before expenses" />
         <StatCard label="Total expenses" :value="formatMoneyShort(yearExpenses, currency)" />
         <StatCard
@@ -93,7 +93,8 @@ function paren(v: number) { return v < 0 ? `(${money(-v)})` : money(v) }
       <div class="mt-6">
         <NetBarChart :series="series" :currency="currency" />
       </div>
-      <table class="mt-6 w-full max-w-xl text-sm">
+      <div class="mt-6 overflow-x-auto">
+      <table class="w-full min-w-[280px] max-w-xl text-sm">
         <tbody>
           <tr v-for="(v, i) in series" :key="i" class="ledger-row">
             <td class="py-1.5">{{ MONTH_NAMES[i] }}</td>
@@ -107,6 +108,7 @@ function paren(v: number) { return v < 0 ? `(${money(-v)})` : money(v) }
           </tr>
         </tbody>
       </table>
+      </div>
     </section>
   </div>
 </template>

@@ -56,17 +56,17 @@ function downloadStatement() {
 
 <template>
   <div>
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="font-display text-3xl font-bold tracking-tight">Tax · NRS</h1>
+    <div class="page-header">
+      <div class="min-w-0">
+        <h1 class="page-title">Tax · NRS</h1>
         <p class="mt-1 text-sm text-faint">
           Your monthly VAT return and a running income-tax estimate for
           <span class="font-medium text-ink">{{ activeBook?.name }}</span>.
         </p>
       </div>
-      <div class="flex items-center gap-2">
-        <input v-model="monthInput" type="month" class="field !w-auto" />
-        <button class="btn-ghost" @click="downloadStatement">Download statement</button>
+      <div class="page-actions">
+        <input v-model="monthInput" type="month" class="field w-full sm:!w-auto" />
+        <button class="btn-ghost w-full sm:w-auto" @click="downloadStatement">Download statement</button>
       </div>
     </div>
 
@@ -80,7 +80,7 @@ function downloadStatement() {
       <section class="rounded-lg border border-rule bg-card p-5 shadow-lift">
         <p class="text-xs uppercase tracking-wider text-faint">VAT to remit · {{ periodLabel }}</p>
         <template v-if="vatRegistered">
-          <p class="mt-1 figure text-3xl font-bold" :class="vatPayable >= 0 ? 'text-ink' : 'text-moss'">
+          <p class="mt-1 figure text-2xl font-bold sm:text-3xl" :class="vatPayable >= 0 ? 'text-ink' : 'text-moss'">
             {{ money(Math.abs(vatPayable)) }}
           </p>
           <p class="mt-1 text-sm text-faint">
@@ -89,14 +89,14 @@ function downloadStatement() {
           </p>
         </template>
         <template v-else>
-          <p class="mt-1 figure text-3xl font-bold text-faint">{{ money(0) }}</p>
+          <p class="mt-1 figure text-2xl font-bold text-faint sm:text-3xl">{{ money(0) }}</p>
           <p class="mt-1 text-sm text-faint">This book isn't VAT-registered, so no VAT is charged or remitted.</p>
         </template>
       </section>
 
       <section class="rounded-lg border border-rule bg-card p-5 shadow-lift">
         <p class="text-xs uppercase tracking-wider text-faint">Income tax · set aside / month</p>
-        <p class="mt-1 figure text-3xl font-bold">{{ money(incomeTax.monthlySetAsideMinor) }}</p>
+        <p class="mt-1 figure text-2xl font-bold sm:text-3xl">{{ money(incomeTax.monthlySetAsideMinor) }}</p>
         <p class="mt-1 text-sm text-faint">
           Est. {{ money(incomeTax.annualTaxMinor) }} for {{ year }} on
           {{ money(incomeTax.taxableProfitMinor) }} profit
@@ -107,12 +107,13 @@ function downloadStatement() {
 
     <!-- VAT return detail -->
     <section v-if="vatRegistered" class="mt-8 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
-      <div class="flex items-baseline justify-between">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
         <h2 class="font-display text-lg font-semibold">VAT return — {{ periodLabel }}</h2>
         <span class="text-xs text-faint">{{ inclusive ? 'prices VAT-inclusive' : 'prices VAT-exclusive' }} · {{ vatPct }}</span>
       </div>
 
-      <table class="mt-4 w-full text-sm">
+      <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[320px] text-sm">
         <thead>
           <tr class="border-b border-rule text-left text-xs uppercase tracking-wider text-faint">
             <th class="py-2">Category</th>
@@ -158,6 +159,7 @@ function downloadStatement() {
           </tr>
         </tbody>
       </table>
+      </div>
       <p class="mt-2 text-xs text-faint">
         Output VAT − input VAT. File and pay by the 21st of the following month. Exempt or zero-rated
         items should be excluded — adjust your categories if any sales/purchases don't carry {{ vatPct }} VAT.

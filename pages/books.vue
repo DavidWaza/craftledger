@@ -41,14 +41,16 @@ function closeForm() {
 
 <template>
   <div>
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 class="font-display text-3xl font-bold tracking-tight">The books</h1>
+    <div class="page-header">
+      <div class="min-w-0">
+        <h1 class="page-title">The books</h1>
         <p class="mt-1 text-sm text-faint">Every sale and every expense, one line at a time.</p>
       </div>
-      <button class="btn-primary" @click="editing = null; showForm = !showForm">
-        {{ showForm && !editing ? 'Close form' : '+ Record an entry' }}
-      </button>
+      <div class="page-actions">
+        <button class="btn-primary w-full sm:w-auto" @click="editing = null; showForm = !showForm">
+          {{ showForm && !editing ? 'Close form' : '+ Record an entry' }}
+        </button>
+      </div>
     </div>
 
     <EntryForm
@@ -56,17 +58,17 @@ function closeForm() {
       class="mt-5" @saved="closeForm" @cancelled="closeForm"
     />
 
-    <div class="mt-6 flex flex-wrap items-center gap-3">
-      <input v-model="monthFilter" type="month" class="field !w-auto" :disabled="allMonths" />
+    <div class="filter-bar mt-6">
+      <input v-model="monthFilter" type="month" class="field" :disabled="allMonths" />
       <label class="flex items-center gap-2 text-sm text-faint">
         <input v-model="allMonths" type="checkbox" class="accent-indigo" /> All months
       </label>
-      <select v-model="typeFilter" class="field !w-auto">
+      <select v-model="typeFilter" class="field">
         <option value="all">In and out</option>
         <option value="income">Money in only</option>
         <option value="expense">Money out only</option>
       </select>
-      <input v-model="search" type="search" class="field !w-auto flex-1 min-w-[160px]" placeholder="Search descriptions…" />
+      <input v-model="search" type="search" class="field sm:min-w-[160px] sm:flex-1" placeholder="Search descriptions…" />
     </div>
 
     <p v-if="deleteError" class="mt-4 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ deleteError }}</p>
@@ -76,7 +78,7 @@ function closeForm() {
       class="mt-4" :entries="filtered" :currency="settings.currency" show-totals
       @edit="startEdit" @remove="handleRemove"
     />
-    <div v-else class="mt-4 rounded-lg border border-dashed border-rule bg-card p-10 text-center text-sm text-faint">
+    <div v-else class="mt-4 rounded-lg border border-dashed border-rule bg-card p-6 text-center text-sm text-faint sm:p-10">
       No entries match this view. Change the month or filters, or record a new entry.
     </div>
   </div>

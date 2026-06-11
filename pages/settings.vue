@@ -93,11 +93,11 @@ function loadSample() {
 </script>
 
 <template>
-  <div class="max-w-xl">
-    <h1 class="font-display text-3xl font-bold tracking-tight">Settings</h1>
+  <div class="mx-auto w-full max-w-xl">
+    <h1 class="page-title">Settings</h1>
 
     <!-- The open book -->
-    <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift">
+    <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
       <div class="flex items-center gap-2">
         <span class="h-4 w-4 rounded-full" :style="{ backgroundColor: bookColorHex(activeBook?.color ?? 'indigo') }" />
         <h2 class="font-display text-lg font-semibold">This book</h2>
@@ -135,7 +135,7 @@ function loadSample() {
     </section>
 
     <!-- Tax (NRS) -->
-    <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift">
+    <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
       <h2 class="font-display text-lg font-semibold">Tax (NRS)</h2>
       <p class="mt-1 text-sm text-faint">
         How this book is treated on the
@@ -170,49 +170,53 @@ function loadSample() {
     </section>
 
     <!-- All books -->
-    <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift">
-      <div class="flex items-center justify-between">
+    <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 class="font-display text-lg font-semibold">Your books</h2>
-        <button class="btn-ghost !py-1.5 text-sm" @click="addBook">+ New book</button>
+        <button class="btn-ghost !py-1.5 w-full text-sm sm:w-auto" @click="addBook">+ New book</button>
       </div>
       <p class="mt-1 text-sm text-faint">
         Keep separate books for different parts of life — personal, work, a child's savings — each private and colour-tagged.
       </p>
       <ul class="mt-4 divide-y divide-rule">
-        <li v-for="b in books" :key="b.id" class="flex items-center gap-3 py-2.5">
-          <span class="h-3.5 w-3.5 shrink-0 rounded-full" :style="{ backgroundColor: bookColorHex(b.color) }" />
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-medium">{{ b.name }}</p>
-            <p class="text-xs text-faint">{{ b.currency }}</p>
+        <li v-for="b in books" :key="b.id" class="flex flex-col gap-2 py-2.5 sm:flex-row sm:items-center sm:gap-3">
+          <div class="flex min-w-0 flex-1 items-center gap-3">
+            <span class="h-3.5 w-3.5 shrink-0 rounded-full" :style="{ backgroundColor: bookColorHex(b.color) }" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium">{{ b.name }}</p>
+              <p class="text-xs text-faint">{{ b.currency }}</p>
+            </div>
           </div>
-          <span v-if="b.id === activeBook?.id" class="rounded-md bg-indigo-wash px-2 py-0.5 text-xs font-medium text-indigo">Open</span>
-          <button v-else class="btn-ghost !py-1 text-xs" @click="setActiveBook(b.id)">Open</button>
-          <button
-            class="btn-ghost !py-1 text-xs"
-            :class="confirmingDelete === b.id ? '!border-clay !text-clay' : ''"
-            :disabled="books.length <= 1"
-            :title="books.length <= 1 ? 'Keep at least one book' : 'Delete this book and all its entries'"
-            @click="askDelete(b.id)"
-          >
-            {{ confirmingDelete === b.id ? 'Confirm delete' : 'Delete' }}
-          </button>
+          <div class="flex flex-wrap gap-2 pl-6 sm:pl-0 sm:shrink-0">
+            <span v-if="b.id === activeBook?.id" class="rounded-md bg-indigo-wash px-2 py-0.5 text-xs font-medium text-indigo">Open</span>
+            <button v-else class="btn-ghost !py-1 text-xs" @click="setActiveBook(b.id)">Open</button>
+            <button
+              class="btn-ghost !py-1 text-xs"
+              :class="confirmingDelete === b.id ? '!border-clay !text-clay' : ''"
+              :disabled="books.length <= 1"
+              :title="books.length <= 1 ? 'Keep at least one book' : 'Delete this book and all its entries'"
+              @click="askDelete(b.id)"
+            >
+              {{ confirmingDelete === b.id ? 'Confirm delete' : 'Delete' }}
+            </button>
+          </div>
         </li>
       </ul>
     </section>
 
     <!-- Records in the open book -->
-    <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift">
+    <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
       <h2 class="font-display text-lg font-semibold">Records in “{{ activeBook?.name }}”</h2>
       <p class="mt-1 text-sm text-faint">
         {{ entries.length }} entries in this book, kept privately in your cloud ledger and reachable from any device.
         Export a CSV any time to keep a copy or hand to an accountant.
       </p>
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button class="btn-ghost" @click="exportCsv" :disabled="!entries.length">Export CSV</button>
-        <button class="btn-ghost" @click="loadSample">Load sample entries</button>
-        <button class="btn-ghost" @click="runImport">Import from this browser</button>
+      <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <button class="btn-ghost w-full sm:w-auto" @click="exportCsv" :disabled="!entries.length">Export CSV</button>
+        <button class="btn-ghost w-full sm:w-auto" @click="loadSample">Load sample entries</button>
+        <button class="btn-ghost w-full sm:w-auto" @click="runImport">Import from this browser</button>
         <button
-          class="btn-ghost"
+          class="btn-ghost w-full sm:w-auto"
           :class="confirmingClear ? '!border-clay !text-clay' : ''"
           @click="askClear"
         >

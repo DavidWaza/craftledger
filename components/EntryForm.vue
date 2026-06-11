@@ -61,7 +61,7 @@ async function save() {
 <template>
   <form class="rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5" @submit.prevent="save">
     <div class="flex flex-wrap items-center justify-between gap-3">
-      <h2 class="font-display text-lg font-semibold">
+      <h2 class="font-display text-base font-semibold sm:text-lg">
         {{ editing ? 'Edit entry' : 'Record an entry' }}
       </h2>
       <div class="flex rounded-md border border-rule p-0.5" role="radiogroup" aria-label="Entry type">
@@ -110,11 +110,11 @@ async function save() {
 
     <p v-if="error" class="mt-3 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ error }}</p>
 
-    <div class="mt-4 flex gap-2">
-      <button type="submit" class="btn-primary" :disabled="busy">
+    <div class="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+      <button type="submit" class="btn-primary w-full sm:w-auto" :disabled="busy">
         {{ busy ? 'Saving…' : editing ? 'Save changes' : 'Add to the books' }}
       </button>
-      <button type="button" class="btn-ghost" @click="emit('cancelled')">Cancel</button>
+      <button type="button" class="btn-ghost w-full sm:w-auto" @click="emit('cancelled')">Cancel</button>
     </div>
   </form>
 </template>

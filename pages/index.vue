@@ -30,16 +30,18 @@ function loadSample() {
 
 <template>
   <div>
-    <div class="flex flex-wrap items-end justify-between gap-4">
-      <div>
+    <div class="page-header">
+      <div class="min-w-0">
         <p class="text-xs uppercase tracking-wider text-faint">{{ MONTH_NAMES[month - 1] }} {{ year }}</p>
-        <h1 class="font-display text-3xl font-bold tracking-tight">
+        <h1 class="page-title">
           {{ settings.businessName || 'Your workshop' }}, at a glance
         </h1>
       </div>
-      <button class="btn-primary" @click="showForm = !showForm">
-        {{ showForm ? 'Close form' : '+ Record an entry' }}
-      </button>
+      <div class="page-actions">
+        <button class="btn-primary w-full sm:w-auto" @click="showForm = !showForm">
+          {{ showForm ? 'Close form' : '+ Record an entry' }}
+        </button>
+      </div>
     </div>
 
     <EntryForm v-if="showForm" class="mt-5" @saved="showForm = false" @cancelled="showForm = false" />
@@ -68,7 +70,7 @@ function loadSample() {
       </section>
 
       <section class="mt-8">
-        <div class="mb-3 flex items-baseline justify-between">
+        <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
           <h2 class="font-display text-lg font-semibold">Latest entries</h2>
           <NuxtLink to="/books" class="text-sm font-medium text-indigo hover:underline">Open the books →</NuxtLink>
         </div>
@@ -77,15 +79,15 @@ function loadSample() {
       </section>
     </template>
 
-    <section v-else-if="!showForm" class="mt-12 rounded-lg border border-dashed border-rule bg-card p-10 text-center">
+    <section v-else-if="!showForm" class="mt-8 rounded-lg border border-dashed border-rule bg-card p-6 text-center sm:mt-12 sm:p-10">
       <h2 class="font-display text-xl font-semibold">Your ledger is empty</h2>
       <p class="mx-auto mt-2 max-w-md text-sm text-faint">
         Record your first sale or expense to start the books. If you'd rather look around first,
         load a year of sample entries — you can clear them any time in Settings.
       </p>
-      <div class="mt-5 flex justify-center gap-2">
-        <button class="btn-primary" @click="showForm = true">Record first entry</button>
-        <button class="btn-ghost" @click="loadSample">Load sample entries</button>
+      <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+        <button class="btn-primary w-full sm:w-auto" @click="showForm = true">Record first entry</button>
+        <button class="btn-ghost w-full sm:w-auto" @click="loadSample">Load sample entries</button>
       </div>
     </section>
   </div>
