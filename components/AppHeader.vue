@@ -5,6 +5,14 @@ const links = [
   { to: '/reports', label: 'Reports' },
   { to: '/settings', label: 'Settings' }
 ]
+
+const supabase = useSupabaseClient()
+const user = useSupabaseUser()
+
+async function signOut() {
+  await supabase.auth.signOut()
+  navigateTo('/login')
+}
 </script>
 
 <template>
@@ -14,7 +22,7 @@ const links = [
         <span class="font-display text-xl font-bold tracking-tight text-indigo">CraftLedger</span>
         <span class="hidden text-xs text-faint sm:inline">books for makers</span>
       </NuxtLink>
-      <nav class="flex gap-1 text-sm" aria-label="Main">
+      <nav v-if="user" class="flex items-center gap-1 text-sm" aria-label="Main">
         <NuxtLink
           v-for="l in links" :key="l.to" :to="l.to"
           class="rounded-md px-3 py-1.5 font-medium text-faint transition-colors hover:text-ink"
@@ -22,6 +30,14 @@ const links = [
         >
           {{ l.label }}
         </NuxtLink>
+        <button
+          v-if="user"
+          type="button"
+          class="ml-1 rounded-md px-3 py-1.5 font-medium text-faint transition-colors hover:text-clay"
+          @click="signOut"
+        >
+          Sign out
+        </button>
       </nav>
     </div>
   </header>

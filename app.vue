@@ -5,7 +5,7 @@
       <NuxtPage />
     </main>
     <footer class="border-t border-rule py-6 text-center text-xs text-faint">
-      CraftLedger · cash-basis books, kept simply · your records stay on this device
+      CraftLedger · cash-basis books, kept simply · your private ledger in the cloud
     </footer>
   </div>
 </template>

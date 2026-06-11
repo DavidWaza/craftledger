@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { CURRENCIES } from '~/types/ledger'
 
-const { settings, entries, clearAll, addEntry } = useLedger()
+const { settings, entries, clearAll, addEntry, importLocal } = useLedger()
 const confirmingClear = ref(false)
+const importMsg = ref('')
+
+async function runImport() {
+  importMsg.value = ''
+  const n = await importLocal()
+  importMsg.value = n
+    ? `Imported ${n} ${n === 1 ? 'entry' : 'entries'} from this browser into your cloud books.`
+    : 'Nothing to import — this browser has no saved entries.'
+}
 
 function askClear() {
   if (confirmingClear.value) {
@@ -58,12 +67,13 @@ function loadSample() {
     <section class="mt-6 rounded-lg border border-rule bg-card p-5 shadow-lift">
       <h2 class="font-display text-lg font-semibold">Your records</h2>
       <p class="mt-1 text-sm text-faint">
-        {{ entries.length }} entries on file, stored only in this browser.
-        Export a CSV any time to keep a copy or hand to an accountant.
+        {{ entries.length }} entries on file, kept privately in your cloud ledger and
+        reachable from any device. Export a CSV any time to keep a copy or hand to an accountant.
       </p>
       <div class="mt-4 flex flex-wrap gap-2">
         <button class="btn-ghost" @click="exportCsv" :disabled="!entries.length">Export CSV</button>
         <button class="btn-ghost" @click="loadSample">Load sample entries</button>
+        <button class="btn-ghost" @click="runImport">Import from this browser</button>
         <button
           class="btn-ghost"
           :class="confirmingClear ? '!border-clay !text-clay' : ''"
@@ -72,6 +82,7 @@ function loadSample() {
           {{ confirmingClear ? 'Click again to erase everything' : 'Clear all entries' }}
         </button>
       </div>
+      <p v-if="importMsg" class="mt-3 rounded-md bg-moss-soft px-3 py-2 text-sm text-moss">{{ importMsg }}</p>
     </section>
   </div>
 </template>

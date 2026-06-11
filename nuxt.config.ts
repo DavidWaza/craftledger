@@ -1,8 +1,17 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: false },
-  modules: ['@nuxtjs/tailwindcss'],
+  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase'],
   css: ['~/assets/css/main.css'],
+  supabase: {
+    // Every page requires sign-in — the books are private to each artisan.
+    // The module reads SUPABASE_URL and SUPABASE_KEY from .env automatically.
+    redirectOptions: {
+      login: '/login',
+      callback: '/confirm',
+      exclude: []
+    }
+  },
   app: {
     head: {
       title: 'CraftLedger — books for makers',
