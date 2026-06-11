@@ -29,7 +29,29 @@ export default defineNuxtPlugin(() => {
     profile.reset()
   }
 
+  /**
+   * The Supabase session event can fire before `useSupabaseUser()` updates, but
+   * the data loaders (loadBooks / loadProfile) read that ref for the user id —
+   * so loading too early gets a null uid and silently no-ops, hanging the UI on
+   * its loading state forever. Wait for the ref to catch up to this account
+   * (or for a newer switch to supersede us) before touching the database.
+   */
+  function waitForUserRef(uid: string, gen: number): Promise<boolean> {
+    if (authUserId(user.value) === uid) return Promise.resolve(true)
+    return new Promise(resolve => {
+      const stop = watch(
+        () => authUserId(user.value),
+        current => {
+          if (gen !== loadGen) { stop(); resolve(false) }
+          else if (current === uid) { stop(); resolve(true) }
+        }
+      )
+    })
+  }
+
   async function activate(uid: string, gen: number) {
+    if (!(await waitForUserRef(uid, gen))) return
+
     const snap = snapshots.get(uid)
     if (snap) {
       books.books.value = [...snap.books]
