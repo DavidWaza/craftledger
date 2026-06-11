@@ -15,7 +15,7 @@ onMounted(() => {
 
 <template>
   <div class="mx-auto flex min-h-[60vh] max-w-sm flex-col items-center justify-center text-center">
-    <span class="font-display text-xl font-bold tracking-tight text-indigo">CraftLedger</span>
+    <span class="font-display text-xl font-bold tracking-tight text-indigo">Omi</span>
     <p class="mt-2 text-sm text-faint">Signing you in…</p>
   </div>
 </template>

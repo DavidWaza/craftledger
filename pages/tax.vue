@@ -2,6 +2,7 @@
 import { VAT_RATE } from '~/utils/tax'
 
 const { activeBook } = useBooks()
+const { loading } = useAppLoading()
 
 const now = new Date()
 const monthInput = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
@@ -24,7 +25,7 @@ function downloadStatement() {
   const lines: string[] = []
   const push = (...cells: (string | number)[]) => lines.push(cells.join(','))
 
-  push('CraftLedger — NRS monthly tax statement')
+  push('Omi — NRS monthly tax statement')
   push('Book', `"${activeBook.value?.name ?? ''}"`)
   push('Currency', currency.value)
   push('Period', `${MONTH_NAMES[month.value - 1]} ${year.value}`)
@@ -70,6 +71,16 @@ function downloadStatement() {
       </div>
     </div>
 
+    <!-- Loading: skeletons instead of the previous book's tax figures -->
+    <template v-if="loading">
+      <div class="mt-6 grid gap-3 sm:grid-cols-2">
+        <CardSkeleton :lines="2" />
+        <CardSkeleton :lines="2" />
+      </div>
+      <CardSkeleton class="mt-8" :lines="7" />
+    </template>
+
+    <template v-else>
     <!-- non-NGN notice -->
     <p v-if="!isNgn" class="mt-5 rounded-md bg-brass-soft px-3 py-2 text-sm text-brass">
       NRS tax applies to Nigerian-naira books. This book is in {{ currency }}, so treat these figures as illustrative.
@@ -203,5 +214,6 @@ function downloadStatement() {
       <NuxtLink to="/settings" class="font-medium text-indigo hover:underline">Settings</NuxtLink> page.
       These figures are a planning estimate, not tax advice — confirm with the NRS or an accountant before filing.
     </p>
+    </template>
   </div>
 </template>

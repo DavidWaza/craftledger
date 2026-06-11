@@ -27,6 +27,11 @@ export function useLedger() {
 
   const entries = useState<LedgerEntry[]>('cl-entries', () => [])
 
+  // False until the active book's entries have been fetched at least once this
+  // page-life. Drives skeleton loaders so a fresh load (or post-switch reload)
+  // shows placeholders instead of a stale or misleadingly-empty screen.
+  const entriesLoaded = useState('cl-entries-loaded', () => false)
+
   /** Per-book "profile": its name and currency. Derived, read-only — edit the
    *  book itself via useBooks().updateBook (the Settings page does this). */
   const settings = computed<Settings>(() => ({
@@ -50,24 +55,32 @@ export function useLedger() {
   /* ---------- load / reset (called by the orchestration plugin) ---------- */
 
   async function reload() {
-    if (!activeBookId.value) {
+    const bookId = activeBookId.value
+    if (!bookId) {
       entries.value = []
+      entriesLoaded.value = true
       return
     }
     const { data, error } = await supabase
       .from('entries')
       .select('id, type, entry_date, description, category, amount_minor')
-      .eq('book_id', activeBookId.value)
+      .eq('book_id', bookId)
       .order('entry_date', { ascending: false })
+    // The open book (or account) may have changed while the query was in
+    // flight — discard this result rather than painting it over newer data.
+    if (activeBookId.value !== bookId) return
     if (error) {
       console.error('[useLedger] reload', error)
+      entriesLoaded.value = true // don't trap the UI on a skeleton forever
       return
     }
     if (data) entries.value = (data as EntryRow[]).map(rowToEntry)
+    entriesLoaded.value = true
   }
 
   function reset() {
     entries.value = []
+    entriesLoaded.value = false
   }
 
   /* ---------- mutations (each writes to Supabase, then updates locally) ---------- */
@@ -212,7 +225,7 @@ export function useLedger() {
   })
 
   return {
-    entries, settings,
+    entries, entriesLoaded, settings,
     reload, reset,
     addEntry, updateEntry, removeEntry, clearAll, importLocal,
     totalFor, monthlyNet, categoryTotals, yearsOnRecord

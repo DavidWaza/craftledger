@@ -13,9 +13,15 @@ const newColor = ref<string>(BOOK_COLORS[0].key)
 const newCurrency = ref<string>('NGN')
 const busy = ref(false)
 
-function pick(id: string) {
-  setActiveBook(id)
+async function pick(id: string) {
   close()
+  if (id === activeBook.value?.id) return
+  setActiveBook(id)
+  // Hard-reload onto the newly-selected book so its ledger loads completely
+  // fresh — no leftover state from the book we just switched away from. Wait a
+  // tick first so the active-book cookie is flushed before the page reloads.
+  await nextTick()
+  window.location.reload()
 }
 
 function startCreate() {

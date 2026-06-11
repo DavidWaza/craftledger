@@ -1,5 +1,5 @@
 // Types describing the Supabase database, so the typed client knows the shape
-// of `books` and `entries`. Mirror this with supabase-schema.sql.
+// of `profiles`, `books` and `entries`. Mirror this with supabase-schema.sql.
 // (You can also regenerate it with: supabase gen types typescript --project-id <ref>)
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
@@ -7,6 +7,30 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          full_name: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          full_name?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string | null
+          full_name?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       books: {
         Row: {
           id: string

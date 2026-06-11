@@ -2,6 +2,7 @@
 import type { LedgerEntry, EntryType } from '~/types/ledger'
 
 const { entries, settings, removeEntry } = useLedger()
+const { loading } = useAppLoading()
 
 const now = new Date()
 const monthFilter = ref(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`)
@@ -73,8 +74,9 @@ function closeForm() {
 
     <p v-if="deleteError" class="mt-4 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ deleteError }}</p>
 
+    <LedgerTableSkeleton v-if="loading" class="mt-4" :rows="8" />
     <LedgerTable
-      v-if="filtered.length"
+      v-else-if="filtered.length"
       class="mt-4" :entries="filtered" :currency="settings.currency" show-totals
       @edit="startEdit" @remove="handleRemove"
     />

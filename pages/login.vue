@@ -38,7 +38,7 @@ async function submit() {
         notice.value = 'Account created. Check your email to confirm, then sign in.'
         mode.value = 'signin'
       } else {
-        navigateTo('/')
+        await navigateTo('/')
       }
     } else {
       const { error: e } = await supabase.auth.signInWithPassword({
@@ -46,7 +46,10 @@ async function submit() {
         password: password.value
       })
       if (e) throw e
-      navigateTo('/')
+      // Session is live before the JWT ref updates — read it directly so the
+      // ledger plugin loads this account, not whoever was signed in before.
+      await supabase.auth.getSession()
+      await navigateTo('/')
     }
   } catch (e: any) {
     error.value = e?.message ?? 'Something went wrong. Try again.'
@@ -59,7 +62,7 @@ async function submit() {
 <template>
   <div class="mx-auto flex min-h-[60vh] w-full max-w-sm flex-col justify-center px-1 sm:min-h-[70vh]">
     <div class="text-center">
-      <span class="font-display text-2xl font-bold tracking-tight text-indigo">CraftLedger</span>
+      <span class="font-display text-2xl font-bold tracking-tight text-indigo">Omi</span>
       <p class="mt-1 text-sm text-faint">Books for makers, kept in the cloud.</p>
     </div>
 

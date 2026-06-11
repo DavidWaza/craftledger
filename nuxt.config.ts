@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      title: 'CraftLedger — books for makers',
+      title: 'Omi — books for makers',
       htmlAttrs: { lang: 'en' },
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

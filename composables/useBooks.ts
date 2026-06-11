@@ -22,11 +22,31 @@ export function useBooks() {
   const user = useSupabaseUser()
 
   const books = useState<Book[]>('cl-books', () => [])
-  const activeBookId = useCookie<string | null>('cl-active-book', {
-    default: () => null,
+
+  // Which book each account last had open, keyed by user id. A single shared
+  // value would mean switching accounts inherits the previous account's book
+  // (and a wrong/empty first paint) — keeping a per-user map means every
+  // account reopens exactly where it left off, across switches and refreshes.
+  const activeByUser = useCookie<Record<string, string>>('cl-active-books', {
+    default: () => ({}),
     sameSite: 'lax',
     maxAge: 60 * 60 * 24 * 365
   })
+  const activeBookId = computed<string | null>({
+    get() {
+      const uid = authUserId(user.value)
+      return uid ? (activeByUser.value[uid] ?? null) : null
+    },
+    set(v) {
+      const uid = authUserId(user.value)
+      if (!uid) return
+      const next = { ...activeByUser.value }
+      if (v) next[uid] = v
+      else delete next[uid]
+      activeByUser.value = next
+    }
+  })
+
   const booksLoaded = useState('cl-books-loaded', () => false)
 
   const activeBook = computed<Book | null>(
@@ -44,38 +64,50 @@ export function useBooks() {
     }
   }
 
-  async function loadBooks() {
+  /** Returns true only when the fetch actually completed (so callers can tell a
+   *  genuinely-empty account apart from a failed/not-yet-authenticated load). */
+  async function loadBooks(): Promise<boolean> {
+    const uid = authUserId(user.value)
+    if (!uid) return false
     const { data, error } = await supabase
       .from('books')
       .select(BOOK_COLUMNS)
+      // Scope to the signed-in user explicitly. RLS already enforces this, but
+      // filtering here means a stale token never surfaces another user's books.
+      .eq('user_id', uid)
       .order('created_at', { ascending: true })
     if (error) {
       console.error('[useBooks] loadBooks', error)
-      return
+      return false
     }
-    if (data) {
-      books.value = (data as BookRow[]).map(rowToBook)
-      // Make sure something sensible is selected.
-      if (!books.value.some(b => b.id === activeBookId.value)) {
-        activeBookId.value = books.value[0]?.id ?? null
-      }
+    books.value = (data as BookRow[] | null ?? []).map(rowToBook)
+    // Make sure something sensible is selected.
+    if (!books.value.some(b => b.id === activeBookId.value)) {
+      activeBookId.value = books.value[0]?.id ?? null
     }
+    return true
   }
 
-  /** Load once; if the user somehow has no book yet, create a starter one. */
+  /** Load once; if the user genuinely has no book yet, create a starter one. */
   async function ensureLoaded() {
     if (booksLoaded.value) return
-    await loadBooks()
+    const ok = await loadBooks()
+    // Only mark loaded — and only auto-create a starter book — when the fetch
+    // actually succeeded. Creating on a failed/unauthenticated load is what
+    // spawned duplicate "My ledger" books on every refresh.
+    if (!ok) return
     if (!books.value.length) {
       await createBook({ name: 'My ledger', color: 'indigo', currency: 'NGN' })
     }
     booksLoaded.value = true
   }
 
+  // Clears the in-memory copy so one account's books can't show under another.
+  // The per-user active-book map is deliberately left intact — that's each
+  // account's saved "which book was I on" memory.
   function reset() {
     books.value = []
     booksLoaded.value = false
-    activeBookId.value = null
   }
 
   async function createBook(input: { name: string; color: string; currency: string }): Promise<Book | null> {

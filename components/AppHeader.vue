@@ -10,12 +10,17 @@ const links = [
 
 const supabase = useSupabaseClient()
 const user = useSupabaseUser()
+const { reset: resetBooks } = useBooks()
+const { reset: resetLedger } = useLedger()
 const menuOpen = ref(false)
 
 watch(() => route.path, () => { menuOpen.value = false })
 
 async function signOut() {
   menuOpen.value = false
+  // Wipe immediately so the previous account's books never flash on /login.
+  resetBooks()
+  resetLedger()
   await supabase.auth.signOut()
   navigateTo('/login')
 }
@@ -25,7 +30,7 @@ async function signOut() {
   <header class="border-b-[3px] border-double border-ink bg-card">
     <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
       <NuxtLink to="/" class="flex min-w-0 items-baseline gap-2" @click="menuOpen = false">
-        <span class="font-display text-lg font-bold tracking-tight text-indigo sm:text-xl">CraftLedger</span>
+        <span class="font-display text-lg font-bold tracking-tight text-indigo sm:text-xl">Omi</span>
         <span class="hidden text-xs text-faint sm:inline">books for makers</span>
       </NuxtLink>
 

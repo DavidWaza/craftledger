@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { settings, totalFor, monthlyNet, categoryTotals, yearsOnRecord } = useLedger()
+const { loading } = useAppLoading()
 
 const now = new Date()
 const year = ref(now.getFullYear())
@@ -39,6 +40,13 @@ function paren(v: number) { return v < 0 ? `(${money(-v)})` : money(v) }
       </div>
     </div>
 
+    <!-- Loading: skeletons instead of the previous book's statement -->
+    <template v-if="loading">
+      <CardSkeleton class="mt-6" :lines="8" />
+      <CardSkeleton chart class="mt-8" />
+    </template>
+
+    <template v-else>
     <!-- Monthly P&L statement -->
     <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-8">
       <header class="text-center">
@@ -110,5 +118,6 @@ function paren(v: number) { return v < 0 ? `(${money(-v)})` : money(v) }
       </table>
       </div>
     </section>
+    </template>
   </div>
 </template>

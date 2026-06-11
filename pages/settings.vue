@@ -3,6 +3,29 @@ import { CURRENCIES, BOOK_COLORS, bookColorHex } from '~/types/ledger'
 
 const { entries, clearAll, addEntry, importLocal } = useLedger()
 const { books, activeBook, setActiveBook, createBook, updateBook, removeBook } = useBooks()
+const { profile, profileLoaded, loadProfile, updateProfile } = useProfile()
+const { loading } = useAppLoading()
+
+// Settings reads both the open book and the account profile, so wait for both.
+const pageLoading = computed(() => loading.value || !profileLoaded.value)
+
+/* ---------- your account (profiles table) ---------- */
+const fullName = ref('')
+watch(profile, p => { fullName.value = p?.fullName ?? '' }, { immediate: true })
+// The plugin loads this on sign-in; load here too in case Settings is the first
+// page hit (e.g. a direct refresh on /settings).
+onMounted(() => { if (!profileLoaded.value) loadProfile() })
+
+const nameSaved = ref(false)
+async function saveProfileName() {
+  const name = fullName.value.trim()
+  if (name === (profile.value?.fullName ?? '')) return
+  const ok = await updateProfile({ fullName: name })
+  if (ok) {
+    nameSaved.value = true
+    setTimeout(() => (nameSaved.value = false), 2000)
+  }
+}
 
 /* ---------- editing the open book ---------- */
 const bookName = ref(activeBook.value?.name ?? '')
@@ -82,7 +105,7 @@ function exportCsv() {
   const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = `${(activeBook.value?.name ?? 'craftledger').replace(/\s+/g, '-').toLowerCase()}-export.csv`
+  a.download = `${(activeBook.value?.name ?? 'Omi').replace(/\s+/g, '-').toLowerCase()}-export.csv`
   a.click()
   URL.revokeObjectURL(a.href)
 }
@@ -95,6 +118,35 @@ function loadSample() {
 <template>
   <div class="mx-auto w-full max-w-xl">
     <h1 class="page-title">Settings</h1>
+
+    <template v-if="pageLoading">
+      <CardSkeleton class="mt-6" :lines="2" />
+      <CardSkeleton class="mt-6" :lines="3" />
+      <CardSkeleton class="mt-6" :lines="3" />
+    </template>
+
+    <template v-else>
+    <!-- Your account -->
+    <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
+      <h2 class="font-display text-lg font-semibold">Your account</h2>
+      <p class="mt-1 text-sm text-faint">Saved to your profile and shared across all your books.</p>
+
+      <label class="mt-4 block">
+        <span class="mb-1 block text-xs font-medium text-faint">Email</span>
+        <input :value="profile?.email" type="email" class="field" disabled />
+      </label>
+
+      <label class="mt-4 block">
+        <span class="mb-1 block text-xs font-medium text-faint">Display name</span>
+        <input
+          v-model="fullName" type="text" class="field" placeholder="Your name"
+          @change="saveProfileName" @blur="saveProfileName"
+        />
+      </label>
+      <p class="mt-2 text-xs" :class="nameSaved ? 'text-moss' : 'text-faint'">
+        {{ nameSaved ? 'Saved.' : 'Changes save automatically.' }}
+      </p>
+    </section>
 
     <!-- The open book -->
     <section class="mt-6 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-5">
@@ -225,5 +277,6 @@ function loadSample() {
       </div>
       <p v-if="importMsg" class="mt-3 rounded-md bg-moss-soft px-3 py-2 text-sm text-moss">{{ importMsg }}</p>
     </section>
+    </template>
   </div>
 </template>

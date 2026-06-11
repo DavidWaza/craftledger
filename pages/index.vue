@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const { entries, settings, totalFor, monthlyNet, addEntry, removeEntry } = useLedger()
+const { loading } = useAppLoading()
 
 const deleteError = ref('')
 
@@ -46,7 +47,17 @@ function loadSample() {
 
     <EntryForm v-if="showForm" class="mt-5" @saved="showForm = false" @cancelled="showForm = false" />
 
-    <template v-if="entries.length">
+    <!-- Loading: show skeletons rather than the previous book's figures -->
+    <template v-if="loading">
+      <StatGridSkeleton class="mt-6" />
+      <CardSkeleton chart class="mt-8" />
+      <div class="mt-8">
+        <Skeleton class="h-5 w-36" />
+        <LedgerTableSkeleton class="mt-3" :rows="5" />
+      </div>
+    </template>
+
+    <template v-else-if="entries.length">
       <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Money in this month" :value="formatMoney(monthIn, currency)" />
         <StatCard label="Money out this month" :value="formatMoney(monthOut, currency)" />
