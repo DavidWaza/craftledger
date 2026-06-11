@@ -25,7 +25,12 @@ async function submit() {
     if (mode.value === 'signup') {
       const { error: e } = await supabase.auth.signUp({
         email: email.value.trim(),
-        password: password.value
+        password: password.value,
+        options: {
+          // Where the confirmation link sends people back to. Points at the
+          // live site so links don't dead-end on localhost.
+          emailRedirectTo: 'https://craftledger.vercel.app/confirm'
+        }
       })
       if (e) throw e
       // With email confirmation on, there's no session yet.
@@ -52,13 +57,13 @@ async function submit() {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center">
+  <div class="mx-auto flex min-h-[60vh] w-full max-w-sm flex-col justify-center px-1 sm:min-h-[70vh]">
     <div class="text-center">
       <span class="font-display text-2xl font-bold tracking-tight text-indigo">CraftLedger</span>
       <p class="mt-1 text-sm text-faint">Books for makers, kept in the cloud.</p>
     </div>
 
-    <form class="mt-8 rounded-lg border border-rule bg-card p-6 shadow-lift" @submit.prevent="submit">
+    <form class="mt-8 rounded-lg border border-rule bg-card p-4 shadow-lift sm:p-6" @submit.prevent="submit">
       <h1 class="font-display text-lg font-semibold">
         {{ mode === 'signin' ? 'Sign in to your books' : 'Create your books' }}
       </h1>
