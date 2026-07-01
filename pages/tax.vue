@@ -25,7 +25,7 @@ function downloadStatement() {
   const lines: string[] = []
   const push = (...cells: (string | number)[]) => lines.push(cells.join(','))
 
-  push('Omi — NRS monthly tax statement')
+  push('craftleger — NRS monthly tax statement')
   push('Book', `"${activeBook.value?.name ?? ''}"`)
   push('Currency', currency.value)
   push('Period', `${MONTH_NAMES[month.value - 1]} ${year.value}`)

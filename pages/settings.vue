@@ -105,7 +105,7 @@ function exportCsv() {
   const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
-  a.download = `${(activeBook.value?.name ?? 'Omi').replace(/\s+/g, '-').toLowerCase()}-export.csv`
+  a.download = `${(activeBook.value?.name ?? 'craftleger').replace(/\s+/g, '-').toLowerCase()}-export.csv`
   a.click()
   URL.revokeObjectURL(a.href)
 }

@@ -30,7 +30,7 @@ async function signOut() {
   <header class="border-b-[3px] border-double border-ink bg-card">
     <div class="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-4">
       <NuxtLink to="/" class="flex min-w-0 items-baseline gap-2" @click="menuOpen = false">
-        <span class="font-display text-lg font-bold tracking-tight text-indigo sm:text-xl">Omi</span>
+        <span class="font-display text-lg font-bold tracking-tight text-indigo sm:text-xl">craftleger</span>
         <span class="hidden text-xs text-faint sm:inline">books for makers</span>
       </NuxtLink>
 

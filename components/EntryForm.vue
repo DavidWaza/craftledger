@@ -15,9 +15,12 @@ const amount = ref(props.editing ? (props.editing.amountMinor / 100).toFixed(2) 
 const error = ref('')
 const busy = ref(false)
 
-const categories = computed(() =>
-  type.value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
-)
+const categories = computed(() => {
+  const base = type.value === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+  const cur = category.value
+  if (cur && !(base as readonly string[]).includes(cur)) return [cur, ...base]
+  return base
+})
 
 watch(type, () => { category.value = '' })
 
@@ -87,10 +90,7 @@ async function save() {
       </label>
       <label class="block">
         <span class="mb-1 block text-xs font-medium text-faint">Category</span>
-        <select v-model="category" class="field">
-          <option value="" disabled>Choose…</option>
-          <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-        </select>
+        <CategoryCombobox v-model="category" :options="categories" />
       </label>
       <label class="block sm:col-span-2">
         <span class="mb-1 block text-xs font-medium text-faint">Description</span>

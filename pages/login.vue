@@ -5,6 +5,7 @@ const user = useSupabaseUser()
 const mode = ref<'signin' | 'signup'>('signin')
 const email = ref('')
 const password = ref('')
+const showPassword = ref(false)
 const error = ref('')
 const notice = ref('')
 const busy = ref(false)
@@ -62,7 +63,7 @@ async function submit() {
 <template>
   <div class="mx-auto flex min-h-[60vh] w-full max-w-sm flex-col justify-center px-1 sm:min-h-[70vh]">
     <div class="text-center">
-      <span class="font-display text-2xl font-bold tracking-tight text-indigo">Omi</span>
+      <span class="font-display text-2xl font-bold tracking-tight text-indigo">craftleger</span>
       <p class="mt-1 text-sm text-faint">Books for makers, kept in the cloud.</p>
     </div>
 
@@ -78,11 +79,48 @@ async function submit() {
 
       <label class="mt-4 block">
         <span class="mb-1 block text-xs font-medium text-faint">Password</span>
-        <input
-          v-model="password" type="password"
-          :autocomplete="mode === 'signin' ? 'current-password' : 'new-password'"
-          class="field" placeholder="At least 6 characters"
-        />
+        <div class="relative">
+          <input
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            :autocomplete="mode === 'signin' ? 'current-password' : 'new-password'"
+            class="field pr-10"
+            placeholder="At least 6 characters"
+          />
+          <button
+            type="button"
+            class="absolute inset-y-0 right-0 flex items-center px-3 text-faint transition-colors hover:text-ink"
+            :aria-label="showPassword ? 'Hide password' : 'Show password'"
+            @click="showPassword = !showPassword"
+          >
+            <svg
+              v-if="showPassword"
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94" stroke-linecap="round" />
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" stroke-linecap="round" />
+              <path d="M1 1l22 22" stroke-linecap="round" />
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" stroke-linecap="round" />
+            </svg>
+            <svg
+              v-else
+              class="h-5 w-5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" stroke-linecap="round" stroke-linejoin="round" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        </div>
       </label>
 
       <p v-if="error" class="mt-3 rounded-md bg-clay-soft px-3 py-2 text-sm text-clay">{{ error }}</p>
