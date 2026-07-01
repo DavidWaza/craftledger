@@ -71,6 +71,7 @@ export const INCOME_CATEGORIES = [
   'Tips & donations',
   'Refunds received',
   'Interest income',
+  'Sports & betting winnings',
   'Other income'
 ] as const
 
@@ -105,7 +106,25 @@ export const EXPENSE_CATEGORIES = [
   'Office & admin supplies',
   'Taxes, levies & permits',
   'Donations & gifts',
-  
+  'Debts & loans',
+  'Interest & penalties',
+  'Legal & professional fees',
+  'Accounting & bookkeeping',
+  'Consulting & advisory services',
+  'Software & cloud services',
+  'Hardware & equipment',
+  'Travel & accommodation',
+  'Transport & logistics',
+  'Storage & warehousing',
+  'Groceries & food',
+  'Clothing & personal care',
+  'Household & cleaning supplies',
+  'Entertainment & leisure',
+  'Medical & healthcare',
+  'Education & training',
+  'Transport & travel',
+  'Vehicle costs',
+  'Bank & finance charges',
   'Other expenses'
 ] as const
 
